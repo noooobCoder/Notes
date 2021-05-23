@@ -20,11 +20,11 @@ directory: 指定目录
 
 ### example
 
-git clone <https://github.com/TeaBreak-Tech/EventCalendar-BackendAPI.git>
+git clone <https://github.com/noooobCoder/desktop-tutorial.git>
 
 ### 或者
 
-git clone git@github.com:TeaBreak-Tech/EventCalendar-BackendAPI.git
+git clone git@github.com:noooobCoder/desktop-tutorial.git
 
 ### 或
 
