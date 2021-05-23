@@ -34,8 +34,17 @@ Cloning into 'another-runoob-name'...
 ## +Git add
 
 将文件添加到暂存区，添加一个或多个:
+
 git add [file1] [file2] ...
+
 添加指定目录到暂存区，包括子目录:
+
 git add [dir]
+
 添加当前目录下的所有文件到暂存区:
+
 git add .
+
+示例:
+
+![study1](https://github.com/noooobCoder/studyphotos/blob/main/study1.PNG)
