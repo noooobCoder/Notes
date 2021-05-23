@@ -48,3 +48,5 @@ git add .
 示例:
 
 ![study1](https://github.com/noooobCoder/studyphotos/blob/main/study1.PNG)
+
+![study2](https://github.com/noooobCoder/studyphotos/blob/main/study2.PNG)
