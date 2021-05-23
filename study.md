@@ -4,29 +4,31 @@
 
 ### 克隆仓库的命令格式
 
-git clone [url]
-git clone repo
+'git clone [url]'
+'git clone repo'
 
 ### 克隆到指定目录
 
-git clone repo dirctory
+'git clone repo dirctory'
 
 ### 说明
 
 repo: Git 仓库
+
 directory: 指定目录
 
 ### example
 
-git clone <https://github.com/TeaBreak-Tech/EventCalendar-BackendAPI.git>
+'git clone <https://github.com/TeaBreak-Tech/EventCalendar-BackendAPI.git>'
 
 ### 或者
 
-git clone git@github.com:TeaBreak-Tech/EventCalendar-BackendAPI.git
+'git clone git@github.com:TeaBreak-Tech/EventCalendar-BackendAPI.git'
 
 ### 或
 
-$ git clone <https://github.com/tianqixin/runoob-git-test> another-runoob-name
+'$ git clone <https://github.com/tianqixin/runoob-git-test> another-runoob-name'
+
 Cloning into 'another-runoob-name'...
 
 ## +Git add
