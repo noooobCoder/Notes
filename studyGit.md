@@ -112,3 +112,27 @@ git push --force origin master
 git push origin --delete master
 
 ![study4](https://github.com/noooobCoder/studyphotos/blob/main/study4.PNG)
+
+## Git log
+
+Git 提交历史一般常用两个命令:
+    git log - 查看历史提交记录。
+    git blame \<file\> - 以列表形式查看指定文件的历史修改记录
+
+### git log
+
+在使用git提交了若干更新，又或者克隆了某个项目，想回顾下提交历史，就可以使用git log命令查看。
+
+也可以在git log 后面加 --oneline来显示历史记录的简洁版本
+
+也可以用 --graph选项，查看历史中什么时候出现了分支、合并。
+
+也可以用 --reverse 参数来逆向显示所有日志
+
+如果只想查找指定用户的提交日历可以使用命令: git log --author
+
+如果你要指定日期，可以执行几个选项：--since和 --before，但是你也可以用 --until和 --after
+
+## Git merge
+
+![study5](https://github.com/noooobCoder/studyphotos/blob/main/study5.PNG)
