@@ -290,7 +290,7 @@ py manage.py shell
 
 新加入的 import datetime 和 from django.utils import timezone 分别导入了 Python 的标准 datetime 模块和 Django 中和时区相关的 django.utils.timezone 工具模块。
 
-## 桥豆麻袋！为什么这里不用按照改变模型的步骤？
+## 桥豆麻袋！为什么这里不用按照改变模型的步骤？？？注意：makemigrate是当对模型有增删修改后用于将改动*应用到数据库上*，需要migrate的只是对模型的修改，比如增加一个字段(Field)，删除或增加一个模型(Model)，修改类方法(函数)是不用再次重复步骤的
 
 保存文件然后通过 python manage.py shell 命令再次打开 Python 交互式命令行：
 
