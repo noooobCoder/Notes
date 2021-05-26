@@ -423,3 +423,242 @@ py manage.py runserver
 现在我们向管理页面注册了问题 Question 类。Django 知道它应该被显示在索引页里：
 
 ![image](https://docs.djangoproject.com/zh-hans/3.2/_images/admin03t.png)
+
+## Django 第三节 Views and templates
+
+### 编写更多视图
+
+即向 app_name/views.py 里面添加更多视图，除了必须的request外，他们还接收参数 question_id。
+
+    def detail(request, question_id):
+        return HttpResponse("You're looking at question %s." % question_id)
+
+    def results(request, question_id):
+        response = "You're looking at the results of question %s."
+        return HttpResponse(response % question_id)
+
+    def vote(request, question_id):
+        return HttpResponse("You're voting on question %s." % question_id)
+
+然后把新视图添加进app_name.urls模块里，只要添加几个url()函数调用就行：
+
+    from django.urls import path
+
+    from . import views
+
+    urlpatterns = [
+        # ex: /polls/
+        path('', views.index, name='index'),
+        # ex: /polls/5/
+        path('<int:question_id>/', views.detail, name='detail'),
+        # ex: /polls/5/results/
+        path('<int:question_id>/results/', views.results, name='results'),
+        # ex: /polls/5/vote/
+        path('<int:question_id>/vote/', views.vote, name='vote'),
+    ]
+
+当浏览器跳转"/polls/34/"(这就是URL), Django 将会运行detail()方法并展示URL中的question_id。至于"/polls/34/result/" 和 "/polls/34/vote/"--则只有暂时用于占位的结果和投票页。
+
+当某人请求你网站的某一页面时——比如说， "/polls/34/" ，Django 将会载入 mysite.urls 模块，因为这在配置项 ROOT_URLCONF 中设置了。然后 Django 寻找名为 urlpatterns 变量并且按序匹配正则表达式。在找到匹配项 'polls/'，它切掉了匹配的文本（"polls/"），将剩余文本——"34/"，发送至 'polls.urls' URLconf 做进一步处理。在这里剩余文本匹配了 '\<int:question_id\>/'，使得我们 Django 以如下形式调用 detail():
+
+    detail(request=<HttpRequest object>, question_id=34)
+
+question_id=34 由 \<int:question_id\> 匹配生成。使用尖括号“捕获”这部分 URL，且以关键字参数的形式发送给视图函数。上述字符串的 :question_id> 部分定义了将被用于区分匹配模式的变量名，而 int: 则是一个转换器决定了应该以什么变量类型匹配这部分的 URL 路径。
+
+### 写个真正有用的视图
+
+写每个视图必做的二事：返回一个包含请求页码内容的HttpResponse对象，或者抛出一个异常，如Http404。
+
+修改 polls/views.py中的index视图：
+
+    from .models import Question
+
+    def index(request):
+        latest_question_list = Question.objects.order_by('-pub_date')[:5]
+        output = ', '.join([q.question_text for q in latest_question_list])
+        return HttpResponse(output)
+
+这里有个问题：页面的设计写死在视图函数的代码里的。如果你想改变页面的样子，你需要编辑 Python 代码
+
+但选择**Django的模板系统**，只要创建一个视图，就可以将页面的设计从代码中分离出来
+
+1. 在app_name目录下创建一个templates(模板))目录(Django将会在这个目录里查找模板文件)
+2. 在刚刚创建的templates目录里，在创建一个目录app_name，然后在其中新建一个文件index.html。路径即是app_name/templates/app_name/
+3. 更新app_name/views.py里的index视图来使用模板
+
+        from django.http import HttpResponse
+        from django.template import loader
+
+        from .models import Question
+
+
+        def index(request):
+            latest_question_list = Question.objects.order_by('-pub_date')[:5]
+            template = loader.get_template('polls/index.html')
+            context = {
+                'latest_question_list': latest_question_list,
+            }
+            return HttpResponse(template.render(context, request))
+
+上述代码的作用是，载入 polls/index.html 模板文件，并且向它传递一个上下文(context)。这个上下文是一个字典，它将模板内的变量映射为 Python 对象。
+
+用你的浏览器访问 "/polls/" ，你将会看见一个无序列表，列出了我们在 教程第 2 部分 中添加的 “What's up” 投票问题，链接指向这个投票的详情页。
+
+### render()简化
+
+    from django.shortcuts import render
+
+    from .models import Question
+
+
+    def index(request):
+        latest_question_list = Question.objects.order_by('-pub_date')[:5]
+        context = {'latest_question_list': latest_question_list}
+        return render(request, 'polls/index.html', context)
+
+The render() function takes the **request** object as its **first argument**, **a template name** as its **second argument** and **a dictionary** as its **optional third argument**. *It returns an HttpResponse object of the given template rendered with(用...来表述) the given context*.
+
+### 抛404
+
+1. 普通法
+
+        from django.http import Http404
+        from django.shortcuts import render
+
+        from .models import Question
+
+        def detail(request, question_id):
+            try:
+                question = Question.objects.get(pk=question_id)
+            except Question.DoesNotExist:
+                raise Http404("Question does not exist")
+            return render(request, 'polls/detail.html', {'question': question})
+
+2. 快捷函数：get_object_or_404()
+
+        from django.shortcuts import get_object_or_404, render
+
+        from .models import Question
+        # ...
+        def detail(request, question_id):
+            question = get_object_or_404(Question, pk=question_id)
+            return render(request, 'polls/detail.html', {'question': question})
+
+### 使用模板系统
+
+polls/detail.html 模板里正式的代码
+
+    <h1>{{ question.question_text }}</h1>
+    <ul>
+    {% for choice in question.choice_set.all %}
+        <li>{{ choice.choice_text }}</li>
+    {% endfor %}
+    </ul>
+
+模板系统统一使用点符号来访问变量的属性。在示例 {{ question.question_text }} 中，首先 Django 尝试对 question 对象使用字典查找（也就是使用 obj.get(str) 操作），如果失败了就尝试属性查找（也就是 obj.str 操作），结果是成功了。如果这一操作也失败的话，将会尝试列表查找（也就是 obj[int] 操作）。
+
+在 {% for %} 循环中发生的函数调用：question.choice_set.all 被解释为 Python 代码 question.choice_set.all() ，将会返回一个可迭代的 Choice 对象，这一对象可以在 {% for %} 标签内部使用。
+
+### 去除模板中的硬编码 URL
+
+从
+
+    <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+
+到
+
+    <li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+
+这样如果要修改视图的URL，就不用在模板里修改任何东西，只用在polls/urls.py 里面修改
+
+### 为URL名称添加命名空间
+
+1. 在根 URLconf 中添加命名空间。在 polls/urls.py 文件中稍作修改，加上 app_name 设置命名空间：
+
+        from django.urls import path
+
+        from . import views
+
+        app_name = 'polls'
+        urlpatterns = [
+            path('', views.index, name='index'),
+            path('<int:question_id>/', views.detail, name='detail'),
+            path('<int:question_id>/results/', views.results, name='results'),
+            path('<int:question_id>/vote/', views.vote, name='vote'),
+        ]
+
+2. 修改polls/index.html文件，从：
+
+        <li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+    修改为指向具有命名空间的详细视图
+
+        <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+
+## Django 第四节 Forms and generic views
+
+forms就看看[那个教程](https://docs.djangoproject.com/zh-hans/3.2/intro/tutorial04/)好了
+
+### 使用通用视图(generic views)
+
+转换成使用通用视图系统，需要做以下几步来完成转换，我们将：
+
+1. 转换 URLconf。
+首先，打开 polls/urls.py 这个 URLconf 并将它修改成：
+
+        from django.urls import path
+
+        from . import views
+
+        app_name = 'polls'
+        urlpatterns = [
+            path('', views.IndexView.as_view(), name='index'),
+            path('<int:pk>/', views.DetailView.as_view(), name='detail'),
+            path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),
+            path('<int:question_id>/vote/', views.vote, name='vote'),
+        ]
+
+1. 删除一些旧的、不再需要的视图。
+
+1. 基于 Django 的通用视图引入新的视图。
+
+        删除旧的 index, detail, 和 results 视图，并用 Django 的通用视图代替。打开 polls/views.py 文件，并将它修改成：
+
+        from django.http import HttpResponseRedirect
+        from django.shortcuts import get_object_or_404, render
+        from django.urls import reverse
+        from django.views import generic
+
+        from .models import Choice, Question
+
+
+        class IndexView(generic.ListView):
+            template_name = 'polls/index.html'
+            context_object_name = 'latest_question_list'
+
+            def get_queryset(self):
+                """Return the last five published questions."""
+                return Question.objects.order_by('-pub_date')[:5]
+
+
+        class DetailView(generic.DetailView):
+            model = Question
+            template_name = 'polls/detail.html'
+
+
+        class ResultsView(generic.DetailView):
+            model = Question
+            template_name = 'polls/results.html'
+
+
+        def vote(request, question_id):
+            ... # same as above, no changes needed.
+
+两个通用视图： ListView 和 DetailView 。这两个视图分别抽象“显示一个对象列表”和“显示一个特定类型对象的详细信息页面”这两种概念。
+
+每个通用视图需要知道它将作用于哪个模型。 这由 model 属性提供。
+DetailView 期望从 URL 中捕获名为 "pk" 的主键值，所以我们为通用视图把 question_id 改成 pk 。
+默认情况下，通用视图 DetailView 使用一个叫做 \<app name\>/\<model name\>_detail.html 的模板。在我们的例子中，它将使用 "polls/question_detail.html" 模板。template_name 属性是用来告诉 Django 使用一个指定的模板名字，而不是自动生成的默认名字。 我们也为 results 列表视图指定了 template_name —— 这确保 results 视图和 detail 视图在渲染时具有不同的外观，即使它们在后台都是同一个 DetailView 。
+
+类似地，ListView 使用一个叫做 \<app name\>/\<model name\>_list.html 的默认模板；我们使用 template_name 来告诉 ListView 使用我们创建的已经存在的 "polls/index.html" 模板。
+
+在之前的教程中，提供模板文件时都带有一个包含 question 和 latest_question_list 变量的 context。对于 DetailView ， question 变量会自动提供—— 因为我们使用 Django 的模型（Question）， Django 能够为 context 变量决定一个合适的名字。然而对于 ListView， 自动生成的 context 变量是 question_list。为了覆盖这个行为，我们提供 context_object_name 属性，表示我们想使用 latest_question_list。作为一种替换方案，你可以改变你的模板来匹配新的 context 变量 —— 这是一种更便捷的方法，告诉 Django 使用你想使用的变量名。
